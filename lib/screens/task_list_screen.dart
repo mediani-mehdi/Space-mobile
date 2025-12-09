@@ -558,8 +558,9 @@ class _SelectableNavItem extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 260),
           curve: Curves.easeOutCubic,
-          width: selected ? (isTablet ? 120 : 100) : (isTablet ? 52 : 44),
-          height: selected ? (isTablet ? 60 : 52) : (isTablet ? 40 : 34),
+          // Slightly smaller capsule to avoid overflow in tight widths
+          width: selected ? (isTablet ? 110 : 92) : (isTablet ? 52 : 44),
+          height: selected ? (isTablet ? 54 : 48) : (isTablet ? 40 : 34),
           decoration: selected
               ? BoxDecoration(
                   gradient: const LinearGradient(
@@ -597,10 +598,14 @@ class _SelectableNavItem extends StatelessWidget {
                             curve: Curves.easeOutCubic,
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: isTablet ? 14 : 13,
+                              fontSize: isTablet ? 13 : 12,
                               fontWeight: FontWeight.w600,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            child: Text(label),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(label),
+                            ),
                           ),
                         )
                       : const SizedBox.shrink(),
