@@ -7,9 +7,10 @@ import '../services/weather_service.dart';
 import 'task_edit_screen.dart';
 import 'dart:ui';
 
-import 'inventory_screen.dart';
-import 'settings_screen.dart';
-import 'tasks_screen.dart';
+import 'home_screen.dart';
+import 'search_screen.dart';
+import 'saved_screen.dart';
+import 'profile_screen.dart';
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
@@ -115,74 +116,143 @@ class _TaskListScreenState extends State<TaskListScreen> {
       // Custom floating nav like the image
       bottomNavigationBar: Padding(
         padding: EdgeInsets.fromLTRB(16, 0, 16, isTablet ? 24 : 20),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Pill background with blur and shadow
-            ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                child: Container(
-                  height: isTablet ? 88 : 76,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.85),
+        child: SizedBox(
+          height: isTablet ? 106 : 92,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Pill background with blur and shadow
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: ClipRRect(
                     borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 18, offset: const Offset(0, 10)),
-                    ],
+                    child: BackdropFilter(
+                      // stronger blur for a frosted glass look
+                      filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                      child: Container(
+                        height: isTablet ? 88 : 76,
+                        decoration: BoxDecoration(
+                          // vertical translucent gradient to mimic frosted glass
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color.fromRGBO(255, 255, 255, 0.45),
+                              Color.fromRGBO(255, 255, 255, 0.10),
+                              Color.fromRGBO(255, 255, 255, 0.06),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(28),
+                          // subtle translucent border to separate from background
+                          border: Border.all(color: Color.fromRGBO(255, 255, 255, 0.18), width: 1),
+                          boxShadow: [
+                            // soft outer shadow to lift the pill off the background
+                            BoxShadow(color: Color.fromRGBO(17, 24, 39, 0.06), blurRadius: 30, offset: const Offset(0, 12)),
+                          ],
+                        ),
+                        padding: EdgeInsets.symmetric(horizontal: isTablet ? 32 : 24),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Left two items
+                            Row(
+                              children: [
+                                _NavItem(
+                                  icon: Icons.home_outlined,
+                                  label: 'Home',
+                                  onTap: () {
+                                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HomeScreen()));
+                                  },
+                                ),
+                                SizedBox(width: isTablet ? 18 : 12),
+                                _NavItem(
+                                  icon: Icons.search_outlined,
+                                  label: 'Search',
+                                  onTap: () {
+                                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen()));
+                                  },
+                                ),
+                              ],
+                            ),
+
+                            // Right two items
+                            Row(
+                              children: [
+                                _NavItem(
+                                  icon: Icons.favorite_border,
+                                  label: 'Saved',
+                                  onTap: () {
+                                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SavedScreen()));
+                                  },
+                                ),
+                                SizedBox(width: isTablet ? 18 : 12),
+                                _NavItem(
+                                  icon: Icons.person_outline,
+                                  label: 'Profile',
+                                  onTap: () {
+                                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: isTablet ? 32 : 24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                ),
+              ),
+
+              // Elevated centered Create button
+              Positioned(
+                bottom: isTablet ? 22 : 12,
+                child: GestureDetector(
+                  onTap: () async {
+                    final newTask = await Navigator.of(context).push<Task?>(
+                      MaterialPageRoute(builder: (_) => const TaskEditScreen()),
+                    );
+                    if (!mounted) return;
+                    if (newTask != null) {
+                      await provider.addTask(newTask);
+                    }
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      _NavItem(
-                        icon: Icons.home_outlined,
-                        label: 'Home',
-                        onTap: () {},
+                      Container(
+                        width: isTablet ? 86 : 72,
+                        height: isTablet ? 86 : 72,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE6DBFF), // light purple
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.12), blurRadius: 16, offset: const Offset(0, 8)),
+                          ],
+                        ),
+                        child: Center(
+                          child: Container(
+                            width: isTablet ? 44 : 40,
+                            height: isTablet ? 44 : 40,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF8B5CF6), // purple circle
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.add, color: Colors.white, size: 26),
+                          ),
+                        ),
                       ),
-                      _NavItem(
-                        icon: Icons.assignment_outlined,
-                        label: 'Tasks',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const TasksScreen()),
-                          );
-                        },
-                      ),
-                      _NavItem(
-                        icon: Icons.add,
-                        label: 'Add Task',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const InventoryScreen()),
-                          );
-                        },
-                      ),
-                      _NavItem(
-                        icon: Icons.inventory_2_outlined,
-                        label: 'Inventory',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const InventoryScreen()),
-                          );
-                        },
-                      ),
-                      _NavItem(
-                        icon: Icons.settings_outlined,
-                        label: 'Settings',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                          );
-                        },
+                      const SizedBox(height: 6),
+                      Text(
+                        'Create',
+                        style: TextStyle(color: const Color(0xFF6C4BD0), fontWeight: FontWeight.w700),
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
