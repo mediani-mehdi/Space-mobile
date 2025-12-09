@@ -11,8 +11,23 @@ import 'inventory_screen.dart';
 import 'settings_screen.dart';
 import 'tasks_screen.dart';
 
-class TaskListScreen extends StatelessWidget {
+class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
+
+  @override
+  State<TaskListScreen> createState() => _TaskListScreenState();
+}
+
+class _TaskListScreenState extends State<TaskListScreen> {
+  DateTime selectedDate = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
+
+  bool _isSameDate(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +35,13 @@ class TaskListScreen extends StatelessWidget {
     final color = Theme.of(context).colorScheme;
     final size = MediaQuery.of(context).size;
     final isTablet = size.width >= 600;
+
+    // Filter tasks to those that match selectedDate (by dueDate)
+    final filteredTasks = provider.tasks.where((t) {
+      final d = t.dueDate;
+      if (d == null) return false;
+      return _isSameDate(d, selectedDate);
+    }).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFF4A5545), // earthy green background similar to screenshot
@@ -30,7 +52,11 @@ class TaskListScreen extends StatelessWidget {
               child: _Header(color: color),
             ),
             SliverToBoxAdapter(
-              child: _DateChips(color: color),
+              child: _DateChips(
+                color: color,
+                selectedDate: selectedDate,
+                onDateSelected: (d) => setState(() => selectedDate = d),
+              ),
             ),
             SliverToBoxAdapter(
               child: Padding(
@@ -62,7 +88,7 @@ class TaskListScreen extends StatelessWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(left: 12),
-                child: _TasksScroller(tasks: provider.tasks),
+                child: _TasksScroller(tasks: filteredTasks),
               ),
             ),
             SliverToBoxAdapter(
@@ -124,7 +150,15 @@ class TaskListScreen extends StatelessWidget {
                           );
                         },
                       ),
-                      SizedBox(width: isTablet ? 84 : 64), // space for center button
+                      _NavItem(
+                        icon: Icons.add,
+                        label: 'Add Task',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const InventoryScreen()),
+                          );
+                        },
+                      ),
                       _NavItem(
                         icon: Icons.inventory_2_outlined,
                         label: 'Inventory',
@@ -145,35 +179,6 @@ class TaskListScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
-              ),
-            ),
-            // Center circular action button (scanner)
-            GestureDetector(
-              onTap: () async {
-                final newTask = await Navigator.of(context).push<Task?>(
-                  MaterialPageRoute(builder: (_) => const TaskEditScreen()),
-                );
-                if (!context.mounted) return;
-                if (newTask != null) {
-                  await provider.addTask(newTask);
-                }
-              },
-              child: Container(
-                width: isTablet ? 72 : 64,
-                height: isTablet ? 72 : 64,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 20, offset: const Offset(0, 10)),
-                  ],
-                ),
-                child: Icon(
-                  Icons.qr_code_scanner,
-                  color: Colors.white,
-                  size: isTablet ? 34 : 28,
                 ),
               ),
             ),
@@ -288,7 +293,9 @@ class _HeaderState extends State<_Header> {
 
 class _DateChips extends StatelessWidget {
   final ColorScheme color;
-  const _DateChips({required this.color});
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onDateSelected;
+  const _DateChips({required this.color, required this.selectedDate, required this.onDateSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -305,20 +312,25 @@ class _DateChips extends StatelessWidget {
         itemBuilder: (_, i) {
           final d = items[i];
           final isToday = d.day == now.day && d.month == now.month && d.year == now.year;
+          final isSelected = d.year == selectedDate.year && d.month == selectedDate.month && d.day == selectedDate.day;
           final dayFont = isTablet ? 22.0 : 20.0;
-           return Container(
-            width: isTablet ? 80 : 70,
-            decoration: BoxDecoration(
-              color: isToday ? Colors.white : const Color(0xFF2E332C),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(d.day.toString(), style: TextStyle(color: isToday ? Colors.black : Colors.white, fontSize: dayFont, fontWeight: FontWeight.bold)),
-                Text(_shortWeekday(d.weekday), style: TextStyle(color: isToday ? Colors.black54 : Colors.white70)),
-              ],
+           return GestureDetector(
+            onTap: () => onDateSelected(DateTime(d.year, d.month, d.day)),
+            child: Container(
+              width: isTablet ? 80 : 70,
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.white : (isToday ? const Color(0xFF2E332C) : const Color(0xFF2E332C)),
+                borderRadius: BorderRadius.circular(18),
+                border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(d.day.toString(), style: TextStyle(color: isSelected ? Colors.black : Colors.white, fontSize: dayFont, fontWeight: FontWeight.bold)),
+                  Text(_shortWeekday(d.weekday), style: TextStyle(color: isSelected ? Colors.black54 : Colors.white70)),
+                ],
+              ),
             ),
           );
         },
