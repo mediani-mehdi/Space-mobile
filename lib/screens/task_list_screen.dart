@@ -579,38 +579,38 @@ class _SelectableNavItem extends StatelessWidget {
                 )
               : const BoxDecoration(),
           child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: iconColor, size: isTablet ? 26 : 22),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeOutCubic,
-                  transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
-                  child: selected
-                      ? Padding(
-                          key: ValueKey(label),
-                          padding: EdgeInsets.only(left: isTablet ? 10 : 8),
-                          child: AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 220),
-                            curve: Curves.easeOutCubic,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: isTablet ? 13 : 12,
-                              fontWeight: FontWeight.w600,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: iconColor, size: isTablet ? 26 : 22),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeOutCubic,
+                    transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+                    child: selected
+                        ? Padding(
+                            key: ValueKey(label),
+                            padding: EdgeInsets.only(left: isTablet ? 10 : 8),
+                            child: AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 220),
+                              curve: Curves.easeOutCubic,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: isTablet ? 13 : 12,
+                                fontWeight: FontWeight.w600,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                               child: Text(label),
                             ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ],
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
