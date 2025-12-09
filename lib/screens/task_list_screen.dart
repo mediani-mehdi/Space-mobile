@@ -7,7 +7,6 @@ import '../services/weather_service.dart';
 import 'task_edit_screen.dart';
 import 'dart:ui';
 
-import 'home_screen.dart';
 import 'search_screen.dart';
 import 'feed_screen.dart';
 import 'settings_screen.dart';
@@ -32,28 +31,13 @@ class _TaskListScreenState extends State<TaskListScreen> {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final provider = Provider.of<TaskProvider>(context);
-    final color = Theme.of(context).colorScheme;
-    final size = MediaQuery.of(context).size;
-    final isTablet = size.width >= 600;
-
-    // Filter tasks to those that match selectedDate (by dueDate)
-    final filteredTasks = provider.tasks.where((t) {
-      final d = t.dueDate;
-      if (d == null) return false;
-      return _isSameDate(d, selectedDate);
-    }).toList();
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF4A5545), // earthy green background similar to screenshot
-      body: SafeArea(
-        child: CustomScrollView(
+  Widget _buildTabBody(ColorScheme color) {
+    switch (_selectedIndex) {
+      case 0:
+        // original task list content
+        return CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(
-              child: _Header(color: color),
-            ),
+            SliverToBoxAdapter(child: _Header(color: color)),
             SliverToBoxAdapter(
               child: _DateChips(
                 color: color,
@@ -79,8 +63,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         final newTask = await Navigator.of(context).push<Task?>(
                           MaterialPageRoute(builder: (_) => const TaskEditScreen()),
                         );
+                        if (!mounted) return;
                         if (newTask != null) {
-                          await provider.addTask(newTask);
+                          await Provider.of<TaskProvider>(context, listen: false).addTask(newTask);
                         }
                       },
                     ),
@@ -91,7 +76,16 @@ class _TaskListScreenState extends State<TaskListScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(left: 12),
-                child: _TasksScroller(tasks: filteredTasks),
+                child: _TasksScroller(
+                  tasks: Provider.of<TaskProvider>(context, listen: false)
+                      .tasks
+                      .where((t) {
+                        final d = t.dueDate;
+                        if (d == null) return false;
+                        return _isSameDate(d, selectedDate);
+                      })
+                      .toList(),
+                ),
               ),
             ),
             SliverToBoxAdapter(
@@ -105,17 +99,34 @@ class _TaskListScreenState extends State<TaskListScreen> {
                     )),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              sliver: const SliverToBoxAdapter(
-                child: _InventoryGrid(),
-              ),
+            const SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              sliver: SliverToBoxAdapter(child: _InventoryGrid()),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 88)),
           ],
-        ),
-      ),
-      // Custom floating nav like the image
+        );
+      case 1:
+        return const FeedScreen();
+      case 2:
+        return const SearchScreen();
+      case 3:
+        return const SettingsScreen();
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final size = MediaQuery.of(context).size;
+    final isTablet = size.width >= 600;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF4A5545), // earthy green background similar to screenshot
+      body: SafeArea(child: _buildTabBody(color)),
+      // Custom floating nav like the image (now without center Create button)
       bottomNavigationBar: Padding(
         padding: EdgeInsets.fromLTRB(16, 0, 16, isTablet ? 24 : 20),
         child: SizedBox(
@@ -160,93 +171,33 @@ class _TaskListScreenState extends State<TaskListScreen> {
                               icon: Icons.home_outlined,
                               label: 'Home',
                               selected: _selectedIndex == 0,
-                              onTap: () {
-                                setState(() => _selectedIndex = 0);
-                                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HomeScreen()));
-                              },
+                              onTap: () => setState(() => _selectedIndex = 0),
                             ),
                             _SelectableNavItem(
                               index: 1,
                               icon: Icons.list_alt_outlined,
                               label: 'Feed',
                               selected: _selectedIndex == 1,
-                              onTap: () {
-                                setState(() => _selectedIndex = 1);
-                                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FeedScreen()));
-                              },
+                              onTap: () => setState(() => _selectedIndex = 1),
                             ),
                             _SelectableNavItem(
                               index: 2,
                               icon: Icons.search_outlined,
                               label: 'Search',
                               selected: _selectedIndex == 2,
-                              onTap: () {
-                                setState(() => _selectedIndex = 2);
-                                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen()));
-                              },
+                              onTap: () => setState(() => _selectedIndex = 2),
                             ),
                             _SelectableNavItem(
                               index: 3,
                               icon: Icons.settings_outlined,
                               label: 'Settings',
                               selected: _selectedIndex == 3,
-                              onTap: () {
-                                setState(() => _selectedIndex = 3);
-                                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
-                              },
+                              onTap: () => setState(() => _selectedIndex = 3),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-
-              // Elevated centered Create button
-              Positioned(
-                bottom: isTablet ? 22 : 12,
-                child: GestureDetector(
-                  onTap: () async {
-                    final newTask = await Navigator.of(context).push<Task?>(
-                      MaterialPageRoute(builder: (_) => const TaskEditScreen()),
-                    );
-                    if (!mounted) return;
-                    if (newTask != null) {
-                      await provider.addTask(newTask);
-                    }
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: isTablet ? 86 : 72,
-                        height: isTablet ? 86 : 72,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE6DBFF), // light purple
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: [
-                            BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.12), blurRadius: 16, offset: const Offset(0, 8)),
-                          ],
-                        ),
-                        child: Center(
-                          child: Container(
-                            width: isTablet ? 44 : 40,
-                            height: isTablet ? 44 : 40,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF8B5CF6), // purple circle
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.add, color: Colors.white, size: 26),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Create',
-                        style: TextStyle(color: const Color(0xFF6C4BD0), fontWeight: FontWeight.w700),
-                      ),
-                    ],
                   ),
                 ),
               ),

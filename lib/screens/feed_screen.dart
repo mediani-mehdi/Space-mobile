@@ -5,10 +5,11 @@ class FeedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Feed')),
-      body: const Center(child: Text('Feed', style: TextStyle(fontSize: 20))),
+    return const Center(
+      child: Text(
+        'Feed',
+        style: TextStyle(fontSize: 20, color: Colors.white),
+      ),
     );
   }
 }
-

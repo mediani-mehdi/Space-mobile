@@ -5,10 +5,6 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: const Center(child: Text('Home', style: TextStyle(fontSize: 20))),
-    );
+    return const SizedBox.shrink(); // TaskListScreen handles the Home tab UI
   }
 }
-
