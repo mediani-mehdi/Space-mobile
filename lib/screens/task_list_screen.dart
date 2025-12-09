@@ -9,8 +9,8 @@ import 'dart:ui';
 
 import 'home_screen.dart';
 import 'search_screen.dart';
-import 'saved_screen.dart';
-import 'profile_screen.dart';
+import 'feed_screen.dart';
+import 'settings_screen.dart';
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
@@ -25,6 +25,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
     DateTime.now().month,
     DateTime.now().day,
   );
+  // track which nav item is selected to render highlight
+  int _selectedIndex = 0;
 
   bool _isSameDate(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
@@ -153,48 +155,44 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         ),
                         padding: EdgeInsets.symmetric(horizontal: isTablet ? 32 : 24),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            // Left two items
-                            Row(
-                              children: [
-                                _NavItem(
-                                  icon: Icons.home_outlined,
-                                  label: 'Home',
-                                  onTap: () {
-                                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HomeScreen()));
-                                  },
-                                ),
-                                SizedBox(width: isTablet ? 18 : 12),
-                                _NavItem(
-                                  icon: Icons.search_outlined,
-                                  label: 'Search',
-                                  onTap: () {
-                                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen()));
-                                  },
-                                ),
-                              ],
+                            // Four items laid out evenly: Home, Feed, Search, Settings
+                            _SelectableNavItem(
+                              icon: Icons.home_outlined,
+                              label: 'Home',
+                              selected: _selectedIndex == 0,
+                              onTap: () {
+                                setState(() => _selectedIndex = 0);
+                                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HomeScreen()));
+                              },
                             ),
-
-                            // Right two items
-                            Row(
-                              children: [
-                                _NavItem(
-                                  icon: Icons.favorite_border,
-                                  label: 'Saved',
-                                  onTap: () {
-                                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SavedScreen()));
-                                  },
-                                ),
-                                SizedBox(width: isTablet ? 18 : 12),
-                                _NavItem(
-                                  icon: Icons.person_outline,
-                                  label: 'Profile',
-                                  onTap: () {
-                                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
-                                  },
-                                ),
-                              ],
+                            _SelectableNavItem(
+                              icon: Icons.list_alt_outlined,
+                              label: 'Feed',
+                              selected: _selectedIndex == 1,
+                              onTap: () {
+                                setState(() => _selectedIndex = 1);
+                                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FeedScreen()));
+                              },
+                            ),
+                            _SelectableNavItem(
+                              icon: Icons.search_outlined,
+                              label: 'Search',
+                              selected: _selectedIndex == 2,
+                              onTap: () {
+                                setState(() => _selectedIndex = 2);
+                                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen()));
+                              },
+                            ),
+                            _SelectableNavItem(
+                              icon: Icons.settings_outlined,
+                              label: 'Settings',
+                              selected: _selectedIndex == 3,
+                              onTap: () {
+                                setState(() => _selectedIndex = 3);
+                                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+                              },
                             ),
                           ],
                         ),
@@ -584,30 +582,50 @@ class _InventoryCard extends StatelessWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _SelectableNavItem extends StatelessWidget {
   final IconData icon;
   final String label;
+  final bool selected;
   final VoidCallback? onTap;
-  const _NavItem({required this.icon, required this.label, this.onTap});
+  const _SelectableNavItem({required this.icon, required this.label, this.selected = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final isTablet = MediaQuery.of(context).size.width >= 600;
-     return InkWell(
-       onTap: onTap,
-       borderRadius: BorderRadius.circular(12),
-       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: isTablet ? 8.0 : 6.0, vertical: isTablet ? 10 : 8),
-         child: Column(
-           mainAxisSize: MainAxisSize.min,
-           children: [
-            Icon(icon, color: Colors.black87, size: isTablet ? 26 : 22),
-            SizedBox(height: isTablet ? 6 : 4),
-            Text(label, style: TextStyle(color: Colors.black87, fontSize: isTablet ? 14 : 12)),
-           ],
-         ),
-       ),
-     );
+    final iconColor = selected ? const Color(0xFF0EA5E9) : const Color(0xFFBDBDBD);
+    final textColor = selected ? const Color(0xFF0EA5E9) : const Color(0xFFBDBDBD);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: isTablet ? 12.0 : 10.0, vertical: isTablet ? 8 : 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // circular highlight behind the icon when selected (Apple-like)
+            if (selected)
+              Container(
+                width: isTablet ? 52 : 44,
+                height: isTablet ? 52 : 44,
+                decoration: BoxDecoration(
+                  color: Color.fromRGBO(255, 255, 255, 0.14),
+                  shape: BoxShape.circle,
+                  // subtle inner shadow to mimic glass inset
+                  boxShadow: [
+                    BoxShadow(color: Color.fromRGBO(255, 255, 255, 0.06), blurRadius: 6, offset: const Offset(0, -2)),
+                    BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.12), blurRadius: 10, offset: const Offset(0, 6)),
+                  ],
+                ),
+                child: Icon(icon, color: iconColor, size: isTablet ? 26 : 22),
+              )
+             else
+               Icon(icon, color: iconColor, size: isTablet ? 26 : 22),
+            const SizedBox(height: 6),
+            Text(label, style: TextStyle(color: textColor, fontSize: isTablet ? 13 : 12)),
+          ],
+        ),
+      ),
+    );
   }
 }
 
