@@ -7,6 +7,7 @@ import '../services/weather_service.dart';
 import 'task_edit_screen.dart';
 import 'dart:ui';
 
+import 'glass_effects.dart';
 import 'search_screen.dart';
 import 'feed_screen.dart';
 import 'settings_screen.dart';
@@ -124,8 +125,15 @@ class _TaskListScreenState extends State<TaskListScreen> {
     final isTablet = size.width >= 600;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF4A5545), // earthy green background similar to screenshot
-      body: SafeArea(child: _buildTabBody(color)),
+      // Use a very dark base to let the liquid + glass stand out
+      backgroundColor: const Color(0xFF020617),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: AnimatedLiquidBackground()),
+          // Foreground content
+          SafeArea(child: _buildTabBody(color)),
+        ],
+      ),
       // Custom floating nav like the image (now without center Create button)
       bottomNavigationBar: Padding(
         padding: EdgeInsets.fromLTRB(16, 0, 16, isTablet ? 24 : 20),
@@ -271,12 +279,9 @@ class _HeaderState extends State<_Header> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: Container(
+      child: GlassContainer(
+        borderRadius: BorderRadius.circular(26),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF566053),
-          borderRadius: BorderRadius.circular(20),
-        ),
         child: Row(
           children: [
             Icon(_getWeatherIcon(), color: Colors.white, size: 28),
@@ -381,15 +386,15 @@ class _TasksScroller extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width >= 600;
      return SizedBox(
-      height: isTablet ? 240 : 220,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.only(right: 12),
-        itemCount: tasks.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 12),
-        itemBuilder: (context, index) => _TaskCard(task: tasks[index], width: isTablet ? size.width * 0.32 : 280),
-      ),
-    );
+       height: isTablet ? 240 : 220,
+       child: ListView.separated(
+         scrollDirection: Axis.horizontal,
+         padding: const EdgeInsets.only(right: 12),
+         itemCount: tasks.length,
+         separatorBuilder: (context, index) => const SizedBox(width: 12),
+         itemBuilder: (context, index) => _TaskCard(task: tasks[index], width: isTablet ? size.width * 0.32 : 280),
+       ),
+     );
   }
 }
 
@@ -411,23 +416,14 @@ class _TaskCard extends StatelessWidget {
            await Provider.of<TaskProvider>(context, listen: false).updateTask(updated);
          }
        },
-       child: Container(
-        width: width ?? (isTablet ? MediaQuery.of(context).size.width * 0.32 : 280),
-         padding: const EdgeInsets.all(16),
-         decoration: BoxDecoration(
-           color: Colors.white,
-           borderRadius: BorderRadius.circular(28),
-           boxShadow: [
-             BoxShadow(
-               color: Colors.black.withValues(alpha: 0.10),
-               blurRadius: 16,
-               offset: const Offset(0, 8),
-             ),
-           ],
-         ),
-         child: Column(
-           crossAxisAlignment: CrossAxisAlignment.start,
-           children: [
+       child: GlassContainer(
+        borderRadius: BorderRadius.circular(28),
+        padding: const EdgeInsets.all(16),
+        child: SizedBox(
+          width: width ?? (isTablet ? MediaQuery.of(context).size.width * 0.32 : 280),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Text(_timeRange(task), style: TextStyle(color: Colors.black54, fontSize: isTablet ? 17 : 16, letterSpacing: 0.2)),
              const SizedBox(height: 4), // Reduced from 8
             Text(task.title, style: TextStyle(fontSize: isTablet ? 24 : 22, fontWeight: FontWeight.w700, height: 1.15)),
@@ -441,9 +437,10 @@ class _TaskCard extends StatelessWidget {
              _PriorityChip(priority: _priorityFor(task)),
            ],
          ),
+        ),
        ),
-     );
-  }
+      );
+   }
 
   String _timeRange(Task t) {
     final start = t.dueDate;
@@ -515,22 +512,21 @@ class _InventoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 180,
+    return GlassContainer(
+      borderRadius: BorderRadius.circular(22),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2E332C),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: Colors.white),
-          const SizedBox(height: 12),
-          Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-          Text(subtitle, style: const TextStyle(color: Colors.white70)),
-        ],
+      child: SizedBox(
+        width: 180,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: Colors.white),
+            const SizedBox(height: 12),
+            Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
+            Text(subtitle, style: const TextStyle(color: Colors.white70)),
+          ],
+        ),
       ),
     );
   }
