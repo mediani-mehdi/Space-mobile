@@ -135,22 +135,19 @@ class _TaskListScreenState extends State<TaskListScreen> {
                       child: Container(
                         height: isTablet ? 88 : 76,
                         decoration: BoxDecoration(
-                          // vertical translucent gradient to mimic frosted glass
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
+                          // darker glass gradient similar to the reference
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                             colors: [
-                              Color.fromRGBO(255, 255, 255, 0.45),
-                              Color.fromRGBO(255, 255, 255, 0.10),
-                              Color.fromRGBO(255, 255, 255, 0.06),
+                              Color(0xFF2A2D30),
+                              Color(0xFF1E2124),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(28),
-                          // subtle translucent border to separate from background
-                          border: Border.all(color: Color.fromRGBO(255, 255, 255, 0.18), width: 1),
-                          boxShadow: [
-                            // soft outer shadow to lift the pill off the background
-                            BoxShadow(color: Color.fromRGBO(17, 24, 39, 0.06), blurRadius: 30, offset: const Offset(0, 12)),
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(color: Color.fromRGBO(255, 255, 255, 0.12), width: 1),
+                          boxShadow: const [
+                            BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.35), blurRadius: 32, offset: Offset(0, 22)),
                           ],
                         ),
                         padding: EdgeInsets.symmetric(horizontal: isTablet ? 32 : 24),
@@ -159,6 +156,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                           children: [
                             // Four items laid out evenly: Home, Feed, Search, Settings
                             _SelectableNavItem(
+                              index: 0,
                               icon: Icons.home_outlined,
                               label: 'Home',
                               selected: _selectedIndex == 0,
@@ -168,6 +166,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                               },
                             ),
                             _SelectableNavItem(
+                              index: 1,
                               icon: Icons.list_alt_outlined,
                               label: 'Feed',
                               selected: _selectedIndex == 1,
@@ -177,6 +176,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                               },
                             ),
                             _SelectableNavItem(
+                              index: 2,
                               icon: Icons.search_outlined,
                               label: 'Search',
                               selected: _selectedIndex == 2,
@@ -186,6 +186,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                               },
                             ),
                             _SelectableNavItem(
+                              index: 3,
                               icon: Icons.settings_outlined,
                               label: 'Settings',
                               selected: _selectedIndex == 3,
@@ -583,17 +584,24 @@ class _InventoryCard extends StatelessWidget {
 }
 
 class _SelectableNavItem extends StatelessWidget {
+  final int index;
   final IconData icon;
   final String label;
   final bool selected;
   final VoidCallback? onTap;
-  const _SelectableNavItem({required this.icon, required this.label, this.selected = false, this.onTap});
+  const _SelectableNavItem({
+    required this.index,
+    required this.icon,
+    required this.label,
+    this.selected = false,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isTablet = MediaQuery.of(context).size.width >= 600;
-    final iconColor = selected ? const Color(0xFF0EA5E9) : const Color(0xFFBDBDBD);
-    final textColor = selected ? const Color(0xFF0EA5E9) : const Color(0xFFBDBDBD);
+    final iconColor = Colors.white;
+    final textColor = Colors.white;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -602,26 +610,47 @@ class _SelectableNavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // circular highlight behind the icon when selected (Apple-like)
+            // Large rounded highlight similar to the reference when selected
             if (selected)
               Container(
-                width: isTablet ? 52 : 44,
-                height: isTablet ? 52 : 44,
+                width: isTablet ? 120 : 100,
+                height: isTablet ? 60 : 52,
                 decoration: BoxDecoration(
-                  color: Color.fromRGBO(255, 255, 255, 0.14),
-                  shape: BoxShape.circle,
-                  // subtle inner shadow to mimic glass inset
-                  boxShadow: [
-                    BoxShadow(color: Color.fromRGBO(255, 255, 255, 0.06), blurRadius: 6, offset: const Offset(0, -2)),
-                    BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.12), blurRadius: 10, offset: const Offset(0, 6)),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF3A3D40),
+                      Color(0xFF2A2D30),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(color: Color.fromRGBO(255, 255, 255, 0.28), width: 1.2),
+                  boxShadow: const [
+                    BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.4), blurRadius: 20, offset: Offset(0, 10)),
                   ],
                 ),
-                child: Icon(icon, color: iconColor, size: isTablet ? 26 : 22),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(icon, color: iconColor, size: isTablet ? 26 : 22),
+                    SizedBox(width: isTablet ? 10 : 8),
+                    Text(label, style: TextStyle(color: textColor, fontSize: isTablet ? 14 : 13, fontWeight: FontWeight.w600)),
+                  ],
+                ),
               )
              else
                Icon(icon, color: iconColor, size: isTablet ? 26 : 22),
-            const SizedBox(height: 6),
-            Text(label, style: TextStyle(color: textColor, fontSize: isTablet ? 13 : 12)),
+            if (!selected) ...[
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: const Color.fromRGBO(255, 255, 255, 0.8),
+                  fontSize: isTablet ? 13 : 12,
+                ),
+              ),
+            ],
           ],
         ),
       ),
