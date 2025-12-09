@@ -143,7 +143,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
                     child: BackdropFilter(
                       // stronger blur for a frosted glass look
                       filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 260),
+                        curve: Curves.easeOutCubic,
                         height: isTablet ? 88 : 76,
                         decoration: BoxDecoration(
                           // darker glass gradient similar to the reference
@@ -551,22 +553,19 @@ class _SelectableNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isTablet = MediaQuery.of(context).size.width >= 600;
-    final iconColor = Colors.white;
-    final textColor = Colors.white;
+    const iconColor = Colors.white;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: isTablet ? 12.0 : 10.0, vertical: isTablet ? 8 : 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Large rounded highlight similar to the reference when selected
-            if (selected)
-              Container(
-                width: isTablet ? 120 : 100,
-                height: isTablet ? 60 : 52,
-                decoration: BoxDecoration(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          width: selected ? (isTablet ? 120 : 100) : (isTablet ? 52 : 44),
+          height: selected ? (isTablet ? 60 : 52) : (isTablet ? 40 : 34),
+          decoration: selected
+              ? BoxDecoration(
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -580,29 +579,39 @@ class _SelectableNavItem extends StatelessWidget {
                   boxShadow: const [
                     BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.4), blurRadius: 20, offset: Offset(0, 10)),
                   ],
+                )
+              : const BoxDecoration(),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: iconColor, size: isTablet ? 26 : 22),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeOutCubic,
+                  transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+                  child: selected
+                      ? Padding(
+                          key: ValueKey(label),
+                          padding: EdgeInsets.only(left: isTablet ? 10 : 8),
+                          child: AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 220),
+                            curve: Curves.easeOutCubic,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isTablet ? 14 : 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            child: Text(label),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(icon, color: iconColor, size: isTablet ? 26 : 22),
-                    SizedBox(width: isTablet ? 10 : 8),
-                    Text(label, style: TextStyle(color: textColor, fontSize: isTablet ? 14 : 13, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              )
-             else
-               Icon(icon, color: iconColor, size: isTablet ? 26 : 22),
-            if (!selected) ...[
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: const Color.fromRGBO(255, 255, 255, 0.8),
-                  fontSize: isTablet ? 13 : 12,
-                ),
-              ),
-            ],
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
