@@ -5,12 +5,8 @@ import '../providers/task_provider.dart';
 import '../models/task.dart';
 import '../services/weather_service.dart';
 import 'task_edit_screen.dart';
-import 'dart:ui';
 
 import 'glass_effects.dart';
-import 'search_screen.dart';
-import 'feed_screen.dart';
-import 'settings_screen.dart';
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
@@ -25,104 +21,90 @@ class _TaskListScreenState extends State<TaskListScreen> {
     DateTime.now().month,
     DateTime.now().day,
   );
-  // track which nav item is selected to render highlight
-  int _selectedIndex = 0;
 
   bool _isSameDate(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  Widget _buildTabBody(ColorScheme color) {
-    switch (_selectedIndex) {
-      case 0:
-        // original task list content
-        return CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: _Header(color: color)),
-            SliverToBoxAdapter(
-              child: _DateChips(
-                color: color,
-                selectedDate: selectedDate,
-                onDateSelected: (d) => setState(() => selectedDate = d),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Day tasks',
-                        style: TextStyle(
-                          color: color.onPrimary,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                        )),
-                    _PillButton(
-                      label: 'Add task',
-                      onTap: () async {
-                        final newTask = await Navigator.of(context).push<Task?>(
-                          MaterialPageRoute(builder: (_) => const TaskEditScreen()),
-                        );
-                        if (!mounted) return;
-                        if (newTask != null) {
-                          await Provider.of<TaskProvider>(context, listen: false).addTask(newTask);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: _TasksScroller(
-                  tasks: Provider.of<TaskProvider>(context, listen: false)
-                      .tasks
-                      .where((t) {
-                        final d = t.dueDate;
-                        if (d == null) return false;
-                        return _isSameDate(d, selectedDate);
-                      })
-                      .toList(),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
-                child: Text('Inventory',
+  /// Build the primary content for the TaskList screen (keeps state as before).
+  Widget _buildContent(ColorScheme color) {
+    // original task list content
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(child: _Header(color: color)),
+        SliverToBoxAdapter(
+          child: _DateChips(
+            color: color,
+            selectedDate: selectedDate,
+            onDateSelected: (d) => setState(() => selectedDate = d),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Day tasks',
                     style: TextStyle(
                       color: color.onPrimary,
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
                     )),
-              ),
+                _PillButton(
+                  label: 'Add task',
+                  onTap: () async {
+                    final newTask = await Navigator.of(context).push<Task?>(
+                      MaterialPageRoute(builder: (_) => const TaskEditScreen()),
+                    );
+                    if (!mounted) return;
+                    if (newTask != null) {
+                      await Provider.of<TaskProvider>(context, listen: false).addTask(newTask);
+                    }
+                  },
+                ),
+              ],
             ),
-            const SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              sliver: SliverToBoxAdapter(child: _InventoryGrid()),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: _TasksScroller(
+              tasks: Provider.of<TaskProvider>(context, listen: false)
+                  .tasks
+                  .where((t) {
+                    final d = t.dueDate;
+                    if (d == null) return false;
+                    return _isSameDate(d, selectedDate);
+                  })
+                  .toList(),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 88)),
-          ],
-        );
-      case 1:
-        return const FeedScreen();
-      case 2:
-        return const SearchScreen();
-      case 3:
-        return const SettingsScreen();
-      default:
-        return const SizedBox.shrink();
-    }
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
+            child: Text('Inventory',
+                style: TextStyle(
+                  color: color.onPrimary,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                )),
+          ),
+        ),
+        const SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: 12),
+          sliver: SliverToBoxAdapter(child: _InventoryGrid()),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 88)),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final size = MediaQuery.of(context).size;
-    final isTablet = size.width >= 600;
 
     return Scaffold(
       // Use a very dark base to let the liquid + glass stand out
@@ -131,90 +113,10 @@ class _TaskListScreenState extends State<TaskListScreen> {
         children: [
           const Positioned.fill(child: AnimatedLiquidBackground()),
           // Foreground content
-          SafeArea(child: _buildTabBody(color)),
+          SafeArea(child: _buildContent(color)),
         ],
       ),
-      // Custom floating nav like the image (now without center Create button)
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.fromLTRB(16, 0, 16, isTablet ? 24 : 20),
-        child: SizedBox(
-          height: isTablet ? 106 : 92,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Pill background with blur and shadow
-              Positioned.fill(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: BackdropFilter(
-                      // stronger blur for a frosted glass look
-                      filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 260),
-                        curve: Curves.easeOutCubic,
-                        height: isTablet ? 88 : 76,
-                        decoration: BoxDecoration(
-                          // darker glass gradient similar to the reference
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF2A2D30),
-                              Color(0xFF1E2124),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(32),
-                          border: Border.all(color: Color.fromRGBO(255, 255, 255, 0.12), width: 1),
-                          boxShadow: const [
-                            BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.35), blurRadius: 32, offset: Offset(0, 22)),
-                          ],
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: isTablet ? 32 : 24),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            // Four items laid out evenly: Home, Feed, Search, Settings
-                            _SelectableNavItem(
-                              index: 0,
-                              icon: Icons.home_outlined,
-                              label: 'Home',
-                              selected: _selectedIndex == 0,
-                              onTap: () => setState(() => _selectedIndex = 0),
-                            ),
-                            _SelectableNavItem(
-                              index: 1,
-                              icon: Icons.list_alt_outlined,
-                              label: 'Feed',
-                              selected: _selectedIndex == 1,
-                              onTap: () => setState(() => _selectedIndex = 1),
-                            ),
-                            _SelectableNavItem(
-                              index: 2,
-                              icon: Icons.search_outlined,
-                              label: 'Search',
-                              selected: _selectedIndex == 2,
-                              onTap: () => setState(() => _selectedIndex = 2),
-                            ),
-                            _SelectableNavItem(
-                              index: 3,
-                              icon: Icons.settings_outlined,
-                              label: 'Settings',
-                              selected: _selectedIndex == 3,
-                              onTap: () => setState(() => _selectedIndex = 3),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      // Note: bottom navigation is provided by the AppShell widget.
     );
   }
 }
@@ -532,92 +434,6 @@ class _InventoryCard extends StatelessWidget {
   }
 }
 
-class _SelectableNavItem extends StatelessWidget {
-  final int index;
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback? onTap;
-  const _SelectableNavItem({
-    required this.index,
-    required this.icon,
-    required this.label,
-    this.selected = false,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isTablet = MediaQuery.of(context).size.width >= 600;
-    const iconColor = Colors.white;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: isTablet ? 12.0 : 10.0, vertical: isTablet ? 8 : 6),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 260),
-          curve: Curves.easeOutCubic,
-          // Slightly smaller capsule to avoid overflow in tight widths
-          width: selected ? (isTablet ? 110 : 92) : (isTablet ? 52 : 44),
-          height: selected ? (isTablet ? 54 : 48) : (isTablet ? 40 : 34),
-          decoration: selected
-              ? BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF3A3D40),
-                      Color(0xFF2A2D30),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: Color.fromRGBO(255, 255, 255, 0.28), width: 1.2),
-                  boxShadow: const [
-                    BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.4), blurRadius: 20, offset: Offset(0, 10)),
-                  ],
-                )
-              : const BoxDecoration(),
-          child: Center(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, color: iconColor, size: isTablet ? 26 : 22),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeOutCubic,
-                    transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
-                    child: selected
-                        ? Padding(
-                            key: ValueKey(label),
-                            padding: EdgeInsets.only(left: isTablet ? 10 : 8),
-                            child: AnimatedDefaultTextStyle(
-                              duration: const Duration(milliseconds: 220),
-                              curve: Curves.easeOutCubic,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: isTablet ? 13 : 12,
-                                fontWeight: FontWeight.w600,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              child: Text(label),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _PillButton extends StatelessWidget {
   final String label;

@@ -4,6 +4,10 @@ import 'providers/task_provider.dart';
 import 'services/notification_service.dart';
 import 'services/storage_service.dart';
 import 'screens/task_list_screen.dart';
+import 'widgets/app_shell.dart';
+import 'screens/feed_screen.dart';
+import 'screens/search_screen.dart';
+import 'screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,7 +33,14 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const TaskListScreen(),
+        home: AppShell(
+          pages: const [
+            TaskListScreen(),
+            FeedScreen(),
+            SearchScreen(),
+            SettingsScreen(),
+          ],
+        ),
       ),
     );
   }
